@@ -1,0 +1,92 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       Int      @id @default(autoincrement())
+  name     String
+  email    String   @unique
+  password String
+  role     Role     @default(USER)
+  pets     Pet[]
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+
+model Pet {
+  id               Int             @id @default(autoincrement())
+  name             String
+  species          String
+  breed            String
+  birthDate        DateTime
+  color            String
+  userid          Int
+  user            User            @relation(fields: [userid], references: [id], onDelete: Cascade)
+  vaccinations     Vaccination[]
+  treatments       Treatment[]
+  activities       Activity[]
+  consultations    Consultation[]
+  vaccinationRecord VaccinationRecord[]
+}
+
+model Vaccination {
+  id             Int     @id @default(autoincrement())
+  name           String
+  applicationDate DateTime
+  weight Decimal @db.Decimal(10, 2)
+  petId          Int     
+  pet            Pet     @relation(fields: [petId], references: [id])
+  vaccinationRecordId Int
+  vaccinationRecord VaccinationRecord @relation(fields: [vaccinationRecordId], references: [id], onDelete: Cascade)
+}
+
+model Treatment {
+  id         Int      @id @default(autoincrement())
+  name       String
+  description String
+  startDate  DateTime
+  endDate    DateTime
+  petId      Int 
+  pet        Pet      @relation(fields: [petId], references: [id], onDelete: Cascade)
+}
+
+model Activity {
+  id           Int      @id @default(autoincrement())
+  activityType String
+  description  String
+  date         DateTime
+  petId        Int 
+  pet          Pet      @relation(fields: [petId], references: [id], onDelete: Cascade)
+}
+
+model Consultation {
+  id           Int      @id @default(autoincrement())
+  veterinarian String
+  description  String
+  date         DateTime
+  petId        Int      
+  pet          Pet      @relation(fields: [petId], references: [id], onDelete: Cascade)
+}
+
+model VaccinationRecord {
+  id         Int      @id @default(autoincrement())
+  recordType String
+  petId      Int      
+  pet        Pet      @relation(fields: [petId], references: [id], onDelete: Cascade)
+  vaccinations Vaccination[]
+}
