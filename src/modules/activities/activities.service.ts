@@ -15,32 +15,39 @@ export class ActivitiesService {
   @ApiResponse({ status: 400, description: 'Solicitud incorrecta.' })
   @ApiResponse({ status: 404, description: 'Mascota no encontrada.' })
   async createActivity(createActivityDto: CreateActivityDto, user: User) {
-    const { activityType, description, date, petId } = createActivityDto;
-    const parsedDate = new Date(date);
-    
-    const pet = await this.prisma.pet.findUnique({ where: { id: petId } });
-    if (!pet) {
-      throw new NotFoundException(`Mascota con ID ${petId} no encontrada`);
-    }
+  const { activityType, description, date, petId } = createActivityDto;
+  const parsedDate = new Date(date);
+  const now = new Date();
 
-    // Verifica si el usuario tiene permiso para crear la actividad
-    if (user.role !== 'ADMIN' && pet.userid !== user.id) {
-      throw new BadRequestException('No tienes permiso para crear una actividad para esta mascota');
-    }
-
-    const activity = await this.prisma.activity.create({
-      data: {
-        activityType,
-        description,
-        date: parsedDate,
-        petId
-      },
-    });
-    return {
-      message: 'Actividad creada exitosamente',
-      activity,
-    };
+  // Validar si la fecha está en el pasado
+  if (parsedDate < now) {
+    throw new BadRequestException('La fecha de la actividad no puede estar en el pasado');
   }
+
+  const pet = await this.prisma.pet.findUnique({ where: { id: petId } });
+  if (!pet) {
+    throw new NotFoundException(`Mascota con ID ${petId} no encontrada`);
+  }
+
+  // Verifica si el usuario tiene permiso para crear la actividad
+  if (user.role !== 'ADMIN' && pet.userid !== user.id) {
+    throw new BadRequestException('No tienes permiso para crear una actividad para esta mascota');
+  }
+
+  const activity = await this.prisma.activity.create({
+    data: {
+      activityType,
+      description,
+      date: parsedDate,
+      petId,
+    },
+  });
+  return {
+    message: 'Actividad creada exitosamente',
+    activity,
+  };
+}
+
 
   @ApiOperation({ summary: 'Obtener todas las actividades' })
   @ApiResponse({ status: 200, description: 'Actividades encontradas.' })
@@ -99,46 +106,56 @@ export class ActivitiesService {
   @ApiResponse({ status: 404, description: 'Mascota no encontrada.' })
   @ApiResponse({ status: 404, description: 'Actividad no encontrada.' })
   async updateActivity(id: number, updateActivityDto: UpdateActivityDto, user: User) {
-    const { activityType, description, date, petId } = updateActivityDto;
+  const { activityType, description, date, petId } = updateActivityDto;
 
-    const activity = await this.prisma.activity.findUnique({ where: { id } });
-    if (!activity) {
-      throw new NotFoundException(`Actividad con ID ${id} no encontrada`);
-    }
-
-    const pet = await this.prisma.pet.findUnique({ where: { id: activity.petId } });
-    
-    // Verifica si el usuario tiene permiso para actualizar la actividad
-    if (user.role !== 'ADMIN' && pet.userid !== user.id) {
-      throw new BadRequestException('No tienes permiso para actualizar esta actividad');
-    }
-
-    const updateData: any = {};
-    
-    if (activityType !== undefined) updateData.activityType = activityType;
-    if (description !== undefined) updateData.description = description;
-    if (date !== undefined) updateData.date = new Date(date);
-    if (petId !== undefined) {
-      const petToUpdate = await this.prisma.pet.findUnique({ where: { id: petId } });
-      if (!petToUpdate) {
-        throw new NotFoundException(`Mascota con ID ${petId} no encontrada`);
-      }
-      updateData.petId = petId;
-    }
-
-    try {
-      const updatedActivity = await this.prisma.activity.update({
-        where: { id },
-        data: updateData,
-      });
-      return {
-        message: 'Actividad actualizada exitosamente',
-        activity: updatedActivity,
-      };
-    } catch (error) {
-      throw new NotFoundException(`Actividad con ID ${id} no encontrada`);
-    }
+  const activity = await this.prisma.activity.findUnique({ where: { id } });
+  if (!activity) {
+    throw new NotFoundException(`Actividad con ID ${id} no encontrada`);
   }
+
+  const pet = await this.prisma.pet.findUnique({ where: { id: activity.petId } });
+
+  // Verifica si el usuario tiene permiso para actualizar la actividad
+  if (user.role !== 'ADMIN' && pet.userid !== user.id) {
+    throw new BadRequestException('No tienes permiso para actualizar esta actividad');
+  }
+
+  const updateData: any = {};
+
+  if (activityType !== undefined) updateData.activityType = activityType;
+  if (description !== undefined) updateData.description = description;
+  if (date !== undefined) {
+    const parsedDate = new Date(date);
+    const now = new Date();
+
+    // Validar si la nueva fecha está en el pasado
+    if (parsedDate < now) {
+      throw new BadRequestException('La fecha de la actividad no puede estar en el pasado');
+    }
+    updateData.date = parsedDate;
+  }
+
+  if (petId !== undefined) {
+    const petToUpdate = await this.prisma.pet.findUnique({ where: { id: petId } });
+    if (!petToUpdate) {
+      throw new NotFoundException(`Mascota con ID ${petId} no encontrada`);
+    }
+    updateData.petId = petId;
+  }
+
+  try {
+    const updatedActivity = await this.prisma.activity.update({
+      where: { id },
+      data: updateData,
+    });
+    return {
+      message: 'Actividad actualizada exitosamente',
+      activity: updatedActivity,
+    };
+  } catch (error) {
+    throw new NotFoundException(`Actividad con ID ${id} no encontrada`);
+  }
+}
 
   @ApiOperation({ summary: 'Eliminar una actividad por ID' })
   @ApiResponse({ status: 200, description: 'Actividad eliminada exitosamente.' })
