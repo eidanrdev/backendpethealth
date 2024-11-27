@@ -64,7 +64,7 @@ export class VaccinationrecordService {
         },
       });
       if (existingRecord) {
-        throw new BadRequestException(`La mascota con ID ${petId} ya tiene una cartilla de ${recordType}`);
+        throw new BadRequestException(`La mascota ya tiene una cartilla de ${recordType}`);
       }
     }
   
@@ -86,7 +86,7 @@ export class VaccinationrecordService {
         },
       });
       if (existingRecord) {
-        throw new BadRequestException(`La mascota con ID ${petId} ya tiene una cartilla de ${recordType}`);
+        throw new BadRequestException(`La mascota ya tiene una cartilla de ${recordType}`);
       }
     }
   
@@ -185,7 +185,7 @@ export class VaccinationrecordService {
         },
       });
       if (existingRecord) {
-        throw new BadRequestException(`La mascota con ID ${petId} ya tiene una cartilla de ${recordType}`);
+        throw new BadRequestException(`La mascota ya tiene una cartilla de ${recordType}`);
       }
     }
 
@@ -207,7 +207,7 @@ export class VaccinationrecordService {
         },
       });
       if (existingRecord) {
-        throw new BadRequestException(`La mascota con ID ${petId} ya tiene una cartilla de ${recordType}`);
+        throw new BadRequestException(`La mascota ya tiene una cartilla de ${recordType}`);
       }
     }
 
