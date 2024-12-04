@@ -31,19 +31,18 @@ export class VaccinationsService {
 
     // Convierte la fecha de aplicación a UTC y normalízala a medianoche
     const parsedApplicationDate = new Date(applicationDate);
-    const normalizedApplicationDate = new Date(
-      Date.UTC(
-        parsedApplicationDate.getUTCFullYear(),
-        parsedApplicationDate.getUTCMonth(),
-        parsedApplicationDate.getUTCDate()
-      )
-    );
-
-    // Obtiene la fecha actual y la normaliza a medianoche UTC
     const currentDate = new Date();
-    const normalizedCurrentDate = new Date(
-      Date.UTC(currentDate.getUTCFullYear(), currentDate.getUTCMonth(), currentDate.getUTCDate())
-    );
+    const normalizedApplicationDate = new Date(Date.UTC(
+      parsedApplicationDate.getUTCFullYear(),
+      parsedApplicationDate.getUTCMonth(),
+      parsedApplicationDate.getUTCDate()
+    ));
+    
+    const normalizedCurrentDate = new Date(Date.UTC(
+      currentDate.getUTCFullYear(),
+      currentDate.getUTCMonth(),
+      currentDate.getUTCDate()
+    ));
 
     // Comparar las fechas normalizadas
     if (normalizedApplicationDate.getTime() !== normalizedCurrentDate.getTime()) {
@@ -54,7 +53,7 @@ export class VaccinationsService {
     const vaccination = await this.prisma.vaccination.create({
       data: {
         name,
-        applicationDate: normalizedApplicationDate, // Usamos la fecha normalizada
+        applicationDate: parsedApplicationDate, // Usamos la fecha normalizada
         weight: new Decimal(weight).toNumber().toFixed(2),
         petId,
         vaccinationRecordId,
@@ -166,7 +165,7 @@ export class VaccinationsService {
         throw new BadRequestException('La fecha de aplicación debe ser igual a la fecha de hoy');
       }
 
-      data.applicationDate = normalizedApplicationDate; // Usamos la fecha normalizada
+      data.applicationDate = parsedApplicationDate; // Usamos la fecha normalizada
     }
 
     if (weight !== undefined) {
